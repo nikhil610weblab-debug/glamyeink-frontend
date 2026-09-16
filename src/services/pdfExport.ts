@@ -27,8 +27,20 @@ export async function exportAgreementPdf(
   originalPdfBytes: ArrayBuffer,
   doc: AgreementDocument,
 ): Promise<Blob> {
-  const pdfDoc = await PDFDocument.load(originalPdfBytes);
+  const pdfDoc = await PDFDocument.load(originalPdfBytes, { ignoreEncryption: true });
   const pages = pdfDoc.getPages();
+
+  // If the source PDF has existing AcroForm fields (already filled via the
+  // native browser form layer before export), flatten them into static page
+  // content so the values are guaranteed to render in any PDF viewer and are
+  // preserved alongside our own drawn fields below.
+  try {
+    const form = pdfDoc.getForm();
+    if (form.getFields().length > 0) form.flatten();
+  } catch {
+    // Not every PDF has a form — nothing to flatten.
+  }
+
 
   for (const field of doc.fields) {
     const page = pages[field.page];

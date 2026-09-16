@@ -79,7 +79,7 @@ export function DashboardPage() {
   return (
     <div className="flex h-full flex-col bg-[var(--background)]">
       <AppHeader />
-      <main className="mx-auto w-full max-w-[1080px] flex-1 px-6 py-8">
+      <main className="mx-auto w-full max-w-[1380px] flex-1 px-14 py-8">
         <div className="mb-6 flex items-end justify-between">
           <div>
             <h1 className="text-[var(--text-2xl)] font-semibold text-[var(--text-primary)]">Agreements</h1>

@@ -54,11 +54,11 @@ export function AgreementsPage() {
   }
 
   return (
-    <div className="mx-auto w-full max-w-[1180px] px-4 py-6 sm:px-6">
+    <div className="mx-auto w-full max-w-[1500px] px-4 py-6 sm:px-6">
       <div className="mb-5 flex items-center justify-between">
         <div>
-          <h1 className="text-[var(--text-2xl)] font-semibold text-[var(--text-primary)]">Agreements</h1>
-          <p className="mt-1 text-[13px] text-[var(--text-muted)]">
+          <h1 className="text-[22px] font-bold">Agreements</h1>
+          <p className="mt-1 text-[14px] text-[var(--text-muted)]">
             Every agreement sent from the editor, with its stored PDF, recipient, and delivery status.
           </p>
         </div>

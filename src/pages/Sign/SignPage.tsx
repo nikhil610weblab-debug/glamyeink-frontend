@@ -5,7 +5,7 @@ import { SignHeader } from '../../components/layout/SignHeader';
 import { EditorToolbar } from '../../components/toolbar/EditorToolbar';
 import { PropertiesPanel } from '../../components/panels/PropertiesPanel';
 import { MobilePropertiesSheet } from '../../components/panels/MobilePropertiesSheet';
-import { PdfCanvas } from '../../components/pdf/PdfCanvas';
+import { PdfCanvas, type PdfCanvasHandle } from '../../components/pdf/PdfCanvas';
 import { ThumbnailSidebar } from '../../components/pdf/ThumbnailSidebar';
 import { PageDrawer } from '../../components/pdf/PageDrawer';
 import { CanvasControls } from '../../components/layout/CanvasControls';
@@ -46,6 +46,7 @@ export function SignPage() {
   const [errorMessage, setErrorMessage] = useState('');
   const [agreementMeta, setAgreementMeta] = useState<PublicAgreement | null>(null);
   const [pdfBlob, setPdfBlob] = useState<Blob | null>(null);
+  const pdfCanvasRef = useRef<PdfCanvasHandle>(null);
   const [finalPdfUrl, setFinalPdfUrl] = useState<string | null>(null);
   const [pageCount, setPageCount] = useState(1);
   const [showThumbnails, setShowThumbnails] = useState(true);
@@ -142,7 +143,7 @@ export function SignPage() {
     }
     setSubmitting(true);
     try {
-      const arrayBuffer = await pdfBlob.arrayBuffer();
+      const arrayBuffer = await (pdfCanvasRef.current?.getExportPdfBytes() ?? pdfBlob.arrayBuffer());
       const flattened = await exportAgreementPdf(arrayBuffer, doc);
       submittedRef.current = true;
       await submitSignedAgreement(id, token, flattened, doc.fields);
@@ -254,6 +255,7 @@ export function SignPage() {
         )}
         <div className="relative min-w-0 flex-1">
           <PdfCanvas
+            ref={pdfCanvasRef}
             file={pdfBlob}
             pageCount={pageCount}
             zoom={store.zoom}

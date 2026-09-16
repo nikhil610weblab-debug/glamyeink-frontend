@@ -83,10 +83,10 @@ export function SettingsPage() {
   }
 
   return (
-    <div className="mx-auto w-full max-w-[820px] px-4 py-6 sm:px-6">
+    <div className="mx-auto w-full max-w-[1500px] px-4 py-6 sm:px-6">
       <div className="mb-5">
-        <h1 className="text-[var(--text-2xl)] font-semibold text-[var(--text-primary)]">Settings</h1>
-        <p className="mt-1 text-[13px] text-[var(--text-muted)]">Manage your admin profile and application configuration.</p>
+        <h1 className="text-[22px] font-semibold">Settings</h1>
+        <p className="mt-1 text-[15px] text-[var(--text-muted)]">Manage your admin profile and application configuration.</p>
       </div>
 
       <div className="flex flex-col gap-4">

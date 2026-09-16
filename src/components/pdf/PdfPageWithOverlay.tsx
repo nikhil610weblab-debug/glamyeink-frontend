@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState, type DragEvent, type MouseEvent } from 'react';
 import { Page } from 'react-pdf';
+import 'react-pdf/dist/Page/AnnotationLayer.css';
 import type { AgreementField, FieldType, ToolId } from '../../types/document';
 import { FieldObject } from '../editor/FieldObject';
 import { pointerToPagePct } from '../../utils/geometry';

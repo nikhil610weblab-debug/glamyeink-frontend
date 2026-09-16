@@ -1,8 +1,19 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { forwardRef, useCallback, useEffect, useImperativeHandle, useMemo, useRef, useState } from 'react';
 import { Document } from 'react-pdf';
+import type { PDFDocumentProxy } from 'pdfjs-dist';
 import type { AgreementField, FieldType, ToolId } from '../../types/document';
 import { PdfPageWithOverlay } from './PdfPageWithOverlay';
 import { CANVAS_PADDING_TOP } from '../../constants/layout';
+
+export interface PdfCanvasHandle {
+  /**
+   * Returns the PDF bytes to export. If the document has native AcroForm
+   * fields that were filled in-place (via the browser's own form layer),
+   * this bakes those values in via pdf.js's own save path; otherwise it
+   * falls back to the original, untouched file bytes.
+   */
+  getExportPdfBytes: () => Promise<ArrayBuffer>;
+}
 
 interface PdfCanvasProps {
   file: Blob | null;
@@ -26,7 +37,7 @@ interface PdfCanvasProps {
   scrollToPageToken?: number;
 }
 
-export function PdfCanvas({
+export const PdfCanvas = forwardRef<PdfCanvasHandle, PdfCanvasProps>(function PdfCanvas({
   file,
   pageCount,
   zoom,
@@ -46,10 +57,29 @@ export function PdfCanvas({
   onRequestSign,
   onLoadError,
   scrollToPageToken,
-}: PdfCanvasProps) {
+}, ref) {
   const containerRef = useRef<HTMLDivElement>(null);
   const pageRefs = useRef<Map<number, HTMLDivElement>>(new Map());
+  const pdfProxyRef = useRef<PDFDocumentProxy | null>(null);
   const [numPages, setNumPages] = useState(pageCount);
+
+  useImperativeHandle(ref, () => ({
+    async getExportPdfBytes() {
+      const proxy = pdfProxyRef.current;
+      if (proxy) {
+        try {
+          const fieldObjects = await proxy.getFieldObjects?.();
+          if (fieldObjects && fieldObjects.size > 0) {
+            const bytes = await proxy.saveDocument();
+            return bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength) as ArrayBuffer;
+          }
+        } catch (err) {
+          console.warn('Could not bake AcroForm values via pdf.js; exporting original bytes instead.', err);
+        }
+      }
+      return file ? file.arrayBuffer() : new ArrayBuffer(0);
+    },
+  }), [file]);
 
   const registerPageEl = useCallback((pageIndex: number, el: HTMLDivElement | null) => {
     if (el) pageRefs.current.set(pageIndex, el);
@@ -94,9 +124,10 @@ export function PdfCanvas({
     >
       <Document
         file={file}
-        onLoadSuccess={({ numPages: n }) => {
-          setNumPages(n);
-          onDocumentLoad(n);
+        onLoadSuccess={(pdf) => {
+          pdfProxyRef.current = pdf;
+          setNumPages(pdf.numPages);
+          onDocumentLoad(pdf.numPages);
         }}
         onLoadError={(err) => onLoadError?.(err.message || 'This PDF could not be opened.')}
         loading={<div className="py-24 text-center text-[var(--text-muted)]">Loading document…</div>}
@@ -125,4 +156,4 @@ export function PdfCanvas({
       </Document>
     </div>
   );
-}
+});

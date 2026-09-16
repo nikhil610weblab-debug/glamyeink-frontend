@@ -70,11 +70,11 @@ export function UsersPage() {
   }
 
   return (
-    <div className="mx-auto w-full max-w-[1180px] px-4 py-6 sm:px-6">
+    <div className="mx-auto w-full max-w-[1500px] px-4 py-6 sm:px-6">
       <div className="mb-5 flex items-center justify-between">
         <div>
-          <h1 className="text-[var(--text-2xl)] font-semibold text-[var(--text-primary)]">Users</h1>
-          <p className="mt-1 text-[13px] text-[var(--text-muted)]">Admins and recipients that have interacted with agreements.</p>
+          <h1 className="text-[22px] font-semibold">Users</h1>
+          <p className="mt-1 text-[14px] text-[var(--text-muted)]">Admins and recipients that have interacted with agreements.</p>
         </div>
         <IconButton label="Refresh" onClick={load}>
           <RefreshCw size={15} className={loading ? 'animate-spin' : ''} />

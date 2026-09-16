@@ -5,7 +5,7 @@ import { EditorHeader } from '../../components/layout/EditorHeader';
 import { EditorToolbar } from '../../components/toolbar/EditorToolbar';
 import { PropertiesPanel } from '../../components/panels/PropertiesPanel';
 import { MobilePropertiesSheet } from '../../components/panels/MobilePropertiesSheet';
-import { PdfCanvas } from '../../components/pdf/PdfCanvas';
+import { PdfCanvas, type PdfCanvasHandle } from '../../components/pdf/PdfCanvas';
 import { ThumbnailSidebar } from '../../components/pdf/ThumbnailSidebar';
 import { PageDrawer } from '../../components/pdf/PageDrawer';
 import { CanvasControls } from '../../components/layout/CanvasControls';
@@ -26,6 +26,7 @@ export function EditorPage() {
   const toast = useToast();
   const store = useEditorStore();
   const [blob, setBlob] = useState<Blob | null>(null);
+  const pdfCanvasRef = useRef<PdfCanvasHandle>(null);
   const [loading, setLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [showThumbnails, setShowThumbnails] = useState(true);
@@ -33,6 +34,7 @@ export function EditorPage() {
   const [signModalFieldId, setSignModalFieldId] = useState<string | null>(null);
   const [sendOpen, setSendOpen] = useState(false);
   const [sendPdfBlob, setSendPdfBlob] = useState<Blob | null>(null);
+  const [sendSourceBlob, setSendSourceBlob] = useState<Blob | null>(null);
   const [preparingSend, setPreparingSend] = useState(false);
   const saveTimer = useRef<number | undefined>(undefined);
   const breakpoint = useBreakpoint();
@@ -81,9 +83,12 @@ export function EditorPage() {
     if (!blob || !store.document) return;
     setPreparingSend(true);
     try {
-      const arrayBuffer = await blob.arrayBuffer();
+      // Bake any values the sender typed into native AcroForm fields so the
+      // recipient's copy (and the sent attachment) both reflect them.
+      const arrayBuffer = await (pdfCanvasRef.current?.getExportPdfBytes() ?? blob.arrayBuffer());
       const exported = await exportAgreementPdf(arrayBuffer, store.document);
       setSendPdfBlob(exported);
+      setSendSourceBlob(new Blob([arrayBuffer], { type: 'application/pdf' }));
       setSendOpen(true);
     } catch {
       toast.show({ tone: 'error', title: 'Could not prepare PDF', description: 'Please try sending again.' });
@@ -137,6 +142,7 @@ export function EditorPage() {
         )}
         <div className="relative min-w-0 flex-1">
           <PdfCanvas
+            ref={pdfCanvasRef}
             file={blob}
             pageCount={doc.pageCount}
             zoom={store.zoom}
@@ -211,7 +217,7 @@ export function EditorPage() {
         open={sendOpen}
         document={doc}
         pdfBlob={sendPdfBlob}
-        sourcePdfBlob={blob}
+        sourcePdfBlob={sendSourceBlob ?? blob}
         onClose={() => setSendOpen(false)}
         onSent={(agreement) => {
           const now = new Date().toISOString();
